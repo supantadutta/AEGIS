@@ -1,0 +1,4 @@
+SecurityEvent
+| where EventID == 4624 and LogonType == 3
+| summarize Hosts=dcount(Computer) by Account, bin(TimeGenerated, 15m)
+| where Hosts > 3

@@ -48,9 +48,7 @@ def _use_case(name: str) -> dict[str, Any]:
 
 
 def _render_vars(uc: dict[str, Any], overrides: dict[str, Any] | None) -> dict[str, Any]:
-    defaults = dict(load_detection_templates().get("defaults", {}))
-    values = defaultdict(str)
-    values.update(defaults)
+    values: dict[str, Any] = dict(load_detection_templates().get("defaults", {}))
     for key in ("threshold", "window_minutes"):
         if key in uc:
             values[key] = uc[key]

@@ -16,7 +16,7 @@ Multi-AI Blue Team Orchestrator. Local-first, mock-mode by default.
 - [x] Phase 9 — Real provider adapters (wired up)
 - [x] Phase 10 — Threat intel integrations + continuous learning
 - [x] Phase 11 — Dashboard
-- [ ] Phase 12 — Test completion, docs, deliverables
+- [x] Phase 12 — Test completion, docs, deliverables
 
 ## Notes / limitations
 
