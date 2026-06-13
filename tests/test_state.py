@@ -6,7 +6,6 @@ import json
 
 from orchestrator.core.state import (
     IOC,
-    AlertContext,
     Finding,
     MitreMapping,
     RouterDecision,

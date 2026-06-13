@@ -13,7 +13,6 @@ from dataclasses import dataclass
 from orchestrator.core.config import env_bool, load_models, load_router
 from orchestrator.core.state import (
     DataSensitivity,
-    RiskLevel,
     RouterDecision,
     SessionState,
     TaskStep,

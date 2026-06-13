@@ -32,37 +32,37 @@ def _load(name: str) -> dict[str, Any]:
         return yaml.safe_load(f) or {}
 
 
-@functools.lru_cache(maxsize=None)
+@functools.cache
 def load_models() -> dict[str, Any]:
     return _load("models.yaml")
 
 
-@functools.lru_cache(maxsize=None)
+@functools.cache
 def load_router() -> dict[str, Any]:
     return _load("router.yaml")
 
 
-@functools.lru_cache(maxsize=None)
+@functools.cache
 def load_agents() -> dict[str, Any]:
     return _load("agents.yaml")
 
 
-@functools.lru_cache(maxsize=None)
+@functools.cache
 def load_security() -> dict[str, Any]:
     return _load("security.yaml")
 
 
-@functools.lru_cache(maxsize=None)
+@functools.cache
 def load_integrations() -> dict[str, Any]:
     return _load("integrations.yaml")
 
 
-@functools.lru_cache(maxsize=None)
+@functools.cache
 def load_detection_templates() -> dict[str, Any]:
     return _load("detection_templates.yaml")
 
 
-@functools.lru_cache(maxsize=None)
+@functools.cache
 def load_report_templates() -> dict[str, Any]:
     return _load("report_templates.yaml")
 

@@ -5,12 +5,12 @@ Multi-AI Blue Team Orchestrator. Local-first, mock-mode by default.
 ## Phase checklist
 
 - [x] Phase 0 — Bootstrap (repo skeleton, pyproject, configs, examples)
-- [ ] Phase 1 — Core schemas (SessionState, AlertContext, Router output)
-- [ ] Phase 2 — Storage & checkpoints (SQLite)
-- [ ] Phase 3 — Providers & MockProvider
-- [ ] Phase 4 — Router (rules mode)
-- [ ] Phase 5 — Orchestrator core loop + Planner + Approvals
-- [ ] Phase 6 — MVP agent set + CLI
+- [x] Phase 1 — Core schemas (SessionState, AlertContext, Router output)
+- [x] Phase 2 — Storage & checkpoints (SQLite)
+- [x] Phase 3 — Providers & MockProvider
+- [x] Phase 4 — Router (rules mode)
+- [x] Phase 5 — Orchestrator core loop + Planner + Approvals
+- [x] Phase 6 — MVP agent set + CLI
 - [ ] Phase 7 — IOC extraction, timeline, tool registry, security layer
 - [ ] Phase 8 — Remaining agents + detections + reports + queries
 - [ ] Phase 9 — Real provider adapters (wired up)

@@ -8,7 +8,7 @@ is what makes a session resumable with a *different* model at any step.
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any, Literal
 
 from pydantic import BaseModel, Field
@@ -52,7 +52,7 @@ def _uuid() -> str:
 
 
 def utcnow() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 # --- Task graph -------------------------------------------------------------

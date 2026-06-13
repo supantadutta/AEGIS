@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 class AgentServices:
     """Bundle of shared dependencies an agent may use (storage, tools)."""
 
-    def __init__(self, storage: "Storage | None" = None) -> None:
+    def __init__(self, storage: Storage | None = None) -> None:
         self.storage = storage
 
 
