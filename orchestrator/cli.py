@@ -343,23 +343,17 @@ def feedback(
     note: str = typer.Option("", "--note"),
 ) -> None:
     """Record analyst feedback (feeds router historical success)."""
+    from orchestrator.core.memory import Memory
+
     storage = _storage()
     try:
-        session = storage.load_session(session_id)
-        model_id = session.decisions[0].selected_model if session.decisions else "mock/mock-model"
-        for d in session.decisions:
-            payload = {
-                "classification_correct": classification_correct,
-                "severity_correct": severity_correct,
-                "action_useful": action_useful,
-                "note": note,
-            }
-            task_type = next((s.task_type for s in session.task_graph.steps
-                              if s.step_id == d.step_id), "triage")
-            storage.save_feedback(session.session_id, d.selected_model, task_type, payload)
-        storage.append_audit(session.session_id, "human", "feedback_recorded", note)
-        console.print(f"[green]Recorded feedback for {len(session.decisions)} decision(s).[/green]")
-        _ = model_id
+        session = _resolve(storage, session_id)
+        n = Memory(storage).record_feedback(
+            session, classification_correct=classification_correct,
+            severity_correct=severity_correct, action_useful=action_useful, note=note,
+        )
+        console.print(f"[green]Recorded feedback for {n} decision(s); "
+                      f"router historical success updated.[/green]")
     finally:
         storage.close()
 
