@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}AEGIS{% endblock %}</title>
+  <style>
+    :root { --bg:#0f1419; --panel:#1a2230; --fg:#d6e1f0; --muted:#8aa0bd;
+            --accent:#4fc3f7; --bad:#ef5350; --good:#66bb6a; --warn:#ffca28; }
+    * { box-sizing: border-box; }
+    body { margin:0; background:var(--bg); color:var(--fg);
+           font:14px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; }
+    a { color: var(--accent); text-decoration: none; }
+    header { padding:14px 22px; background:#0b0f14; border-bottom:1px solid #243044;
+             display:flex; align-items:center; gap:14px; }
+    header h1 { font-size:18px; margin:0; letter-spacing:2px; }
+    .tag { font-size:11px; color:var(--muted); }
+    main { padding:22px; max-width:1200px; margin:0 auto; }
+    .panel { background:var(--panel); border:1px solid #243044; border-radius:8px;
+             padding:14px 16px; margin-bottom:16px; }
+    .panel h2 { margin:0 0 10px; font-size:14px; color:var(--accent);
+                text-transform:uppercase; letter-spacing:1px; }
+    table { width:100%; border-collapse:collapse; }
+    th,td { text-align:left; padding:6px 8px; border-bottom:1px solid #243044;
+            vertical-align:top; font-size:13px; }
+    th { color:var(--muted); font-weight:600; }
+    .pill { padding:1px 8px; border-radius:10px; font-size:11px; }
+    .sev-high,.sev-critical,.v-malicious { background:#3a1414; color:var(--bad); }
+    .sev-medium,.v-suspicious { background:#3a3014; color:var(--warn); }
+    .sev-low,.v-benign { background:#14331a; color:var(--good); }
+    .status-completed { color:var(--good); } .status-waiting_approval { color:var(--warn); }
+    .status-failed { color:var(--bad); }
+    pre { white-space:pre-wrap; background:#0b0f14; padding:12px; border-radius:6px;
+          overflow:auto; max-height:480px; }
+    .grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    button, input[type=submit] { background:var(--accent); color:#06121c; border:0;
+            padding:6px 12px; border-radius:5px; cursor:pointer; font-weight:600; }
+    form label { margin-right:12px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🛡 AEGIS</h1>
+    <span class="tag">Multi-AI Blue Team Orchestrator · defensive · local-first</span>
+    <span style="margin-left:auto"><a href="/">sessions</a></span>
+  </header>
+  <main>{% block body %}{% endblock %}</main>
+</body>
+</html>

@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% block title %}AEGIS — {{ s.session_id[:8] }}{% endblock %}
+{% block body %}
+<div class="panel">
+  <h2>Investigation {{ s.session_id[:8] }}</h2>
+  <p>
+    <span class="status-{{ s.status }}">{{ s.status }}</span> ·
+    classification: <b>{{ s.classification or 'n/a' }}</b> ·
+    severity:
+    {% set sev = s.severity_assessment.severity if s.severity_assessment else 'n/a' %}
+    <span class="pill sev-{{ sev }}">{{ sev }}</span> ·
+    cost: ${{ '%.4f' % s.costs.total_usd }} ·
+    tokens: {{ s.token_usage.prompt_tokens + s.token_usage.completion_tokens }}
+  </p>
+  <p class="tag">Goal: {{ s.user_goal }}</p>
+</div>
+
+{% if pending %}
+<div class="panel" style="border-color:var(--warn)">
+  <h2>⚠ Approval Queue</h2>
+  {% for a in pending %}<div>{{ a.action }} — {{ a.note }}</div>{% endfor %}
+  <form method="post" action="/session/{{ s.session_id }}/approve" style="margin-top:8px">
+    <input type="submit" value="Approve all pending">
+  </form>
+</div>
+{% endif %}
+
+<div class="grid">
+  <div class="panel">
+    <h2>Task Graph</h2>
+    <table><tr><th>Step</th><th>Agent</th><th>Status</th><th>Model</th></tr>
+    {% for st in s.task_graph.steps %}
+      <tr><td>{{ st.name }}</td><td>{{ st.agent }}</td>
+          <td class="status-{{ st.status }}">{{ st.status }}</td>
+          <td class="tag">{{ st.selected_model or '-' }}</td></tr>
+    {% endfor %}</table>
+  </div>
+
+  <div class="panel">
+    <h2>Router Decisions</h2>
+    <table><tr><th>Agent</th><th>Model</th><th>Conf</th></tr>
+    {% for d in s.decisions %}
+      <tr><td>{{ d.selected_agent }}</td><td class="tag">{{ d.selected_model }}</td>
+          <td>{{ d.confidence }}</td></tr>
+    {% endfor %}</table>
+  </div>
+
+  <div class="panel">
+    <h2>IOCs</h2>
+    <table><tr><th>Type</th><th>Value</th></tr>
+    {% for i in s.indicators_of_compromise %}
+      <tr><td>{{ i.type }}</td><td>{{ i.value }}</td></tr>{% endfor %}</table>
+  </div>
+
+  <div class="panel">
+    <h2>Threat Intel</h2>
+    <table><tr><th>Source</th><th>Observable</th><th>Verdict</th></tr>
+    {% for r in s.threat_intel_results if r.verdict != 'unknown' %}
+      <tr><td>{{ r.source }}</td><td>{{ r.observable }}</td>
+          <td><span class="pill v-{{ r.verdict }}">{{ r.verdict }}</span></td></tr>
+    {% endfor %}</table>
+  </div>
+
+  <div class="panel">
+    <h2>MITRE ATT&CK</h2>
+    <table><tr><th>Tactic</th><th>Technique</th><th>Conf</th></tr>
+    {% for m in s.mitre_attack_mapping %}
+      <tr><td>{{ m.tactic }}</td><td>{{ m.technique_id }} {{ m.technique_name }}</td>
+          <td>{{ m.confidence }}</td></tr>{% endfor %}</table>
+  </div>
+
+  <div class="panel">
+    <h2>Timeline</h2>
+    <table><tr><th>Time</th><th>Event</th><th>Actor</th></tr>
+    {% for e in s.timeline_events %}
+      <tr><td class="tag">{{ e.timestamp.isoformat()[:19] }}</td>
+          <td>{{ e.event_type }}</td><td>{{ e.actor or '-' }}</td></tr>{% endfor %}</table>
+  </div>
+</div>
+
+<div class="panel">
+  <h2>Detections &amp; Queries</h2>
+  {% for d in s.detection_rules %}<div>📐 <b>{{ d.format }}</b>: {{ d.title }}</div>{% endfor %}
+  {% for q in s.generated_queries %}<div>🔎 <b>{{ q.platform }}</b>: {{ q.use_case }}</div>{% endfor %}
+</div>
+
+<div class="panel">
+  <h2>Recommended Response (approval-gated)</h2>
+  {% for a in s.containment_actions %}<div>🛑 [containment] {{ a.description }}</div>{% endfor %}
+  {% for a in s.eradication_actions %}<div>🧹 [eradication] {{ a.description }}</div>{% endfor %}
+  {% for a in s.recovery_actions %}<div>♻ [recovery] {{ a.description }}</div>{% endfor %}
+</div>
+
+<div class="panel">
+  <h2>Evidence Vault</h2>
+  <table><tr><th>Type</th><th>Source</th><th>Custody</th></tr>
+  {% for e in s.evidence_items %}
+    <tr><td>{{ e.type }}</td><td>{{ e.source }}</td>
+        <td class="tag">{{ e.chain_of_custody_note }}</td></tr>{% endfor %}</table>
+</div>
+
+<div class="panel">
+  <h2>Analyst Report</h2>
+  <pre>{{ report }}</pre>
+</div>
+
+<div class="panel">
+  <h2>Analyst Feedback</h2>
+  <form method="post" action="/session/{{ s.session_id }}/feedback">
+    <label><input type="checkbox" name="classification_correct" checked> classification correct</label>
+    <label><input type="checkbox" name="severity_correct" checked> severity correct</label>
+    <label><input type="checkbox" name="action_useful" checked> action useful</label><br><br>
+    <input type="text" name="note" placeholder="note" style="width:50%">
+    <input type="submit" value="Submit feedback">
+  </form>
+</div>
+{% endblock %}
