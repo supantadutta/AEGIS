@@ -12,7 +12,7 @@ Multi-AI Blue Team Orchestrator. Local-first, mock-mode by default.
 - [x] Phase 5 — Orchestrator core loop + Planner + Approvals
 - [x] Phase 6 — MVP agent set + CLI
 - [x] Phase 7 — IOC extraction, timeline, tool registry, security layer
-- [ ] Phase 8 — Remaining agents + detections + reports + queries
+- [x] Phase 8 — Remaining agents + detections + reports + queries
 - [ ] Phase 9 — Real provider adapters (wired up)
 - [ ] Phase 10 — Threat intel integrations + continuous learning
 - [ ] Phase 11 — Dashboard

@@ -8,10 +8,12 @@ from orchestrator.agents.case_report import CaseReportAgent
 from orchestrator.agents.detection_engineer import DetectionEngineerAgent
 from orchestrator.agents.incident_response import IncidentResponseAgent
 from orchestrator.agents.log_analysis import LogAnalysisAgent
+from orchestrator.agents.planner import PlannerAgent
 from orchestrator.agents.soc_investigator import SOCInvestigatorAgent
 from orchestrator.agents.threat_intel import ThreatIntelAgent
 
 # MVP-flow agents (Phase 6). Remaining specialists register in Phase 8.
+register("PlannerAgent", PlannerAgent)
 register("SOCInvestigatorAgent", SOCInvestigatorAgent)
 register("ThreatIntelAgent", ThreatIntelAgent)
 register("LogAnalysisAgent", LogAnalysisAgent)
