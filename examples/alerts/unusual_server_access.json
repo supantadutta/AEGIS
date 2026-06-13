@@ -1,0 +1,16 @@
+{
+  "alert_id": "ALRT-2026-0004",
+  "alert_name": "Unusual Server Access by HR User",
+  "severity": "medium",
+  "source_tool": "Microsoft Sentinel",
+  "detection_name": "First-Time Server Access",
+  "detection_id": "UBA-114",
+  "event_time": "2026-06-12T22:05:12Z",
+  "source_host": "WKS-1042",
+  "destination_host": "FILE-SRV-02",
+  "username": "arossi",
+  "asset_criticality": "high",
+  "business_impact": "HR user accessed Finance file server for the first time.",
+  "analyst_notes": "Off-hours access (22:05). User has no prior history on FILE-SRV-02.",
+  "raw_log": "2026-06-12T22:05:12Z EventID=4624 user=arossi src_host=WKS-1042 dst_host=FILE-SRV-02 logon_type=3 outcome=success"
+}

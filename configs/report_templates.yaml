@@ -1,0 +1,118 @@
+# Report templates rendered by tools/reports.py from SessionState. Each is a
+# Jinja2-style template string; {{ }} expressions are filled from a context
+# dict the renderer builds out of SessionState.
+templates:
+  analyst:
+    title: SOC Analyst Note
+    body: |
+      # SOC Analyst Note — {{ alert_name }}
+
+      **Session:** {{ session_id }}
+      **Generated:** {{ generated_at }}
+      **Classification:** {{ classification }}
+      **Severity:** {{ severity }}   **Confidence:** {{ confidence }}
+
+      ## Alert Summary
+      {{ alert_summary }}
+
+      ## Key Evidence
+      {% for e in evidence %}- {{ e }}
+      {% endfor %}
+
+      ## Investigation Steps
+      {% for s in steps %}{{ loop.index }}. {{ s }}
+      {% endfor %}
+
+      ## Findings
+      {% for f in findings %}- {{ f }}
+      {% endfor %}
+
+      ## MITRE ATT&CK Mapping
+      {% for m in mitre %}- {{ m.technique_id }} {{ m.technique_name }} ({{ m.tactic }}) — conf {{ m.confidence }}
+      {% endfor %}
+
+      ## Recommended Actions
+      {% for a in recommended_actions %}- {{ a }}
+      {% endfor %}
+
+      ## Closure Note
+      {{ closure_note }}
+
+  incident:
+    title: Incident Report
+    body: |
+      # Incident Report — {{ alert_name }}
+
+      **Incident Number:** {{ session_id }}
+      **Severity:** {{ severity }}
+      **Detection Source:** {{ source_tool }}
+      **Generated:** {{ generated_at }}
+
+      ## Timeline
+      {% for t in timeline %}- {{ t.timestamp }} | {{ t.source }} | {{ t.event_type }} | {{ t.explanation }}
+      {% endfor %}
+
+      ## Scope
+      Affected assets: {{ affected_assets }}
+      Affected users: {{ affected_users }}
+
+      ## Root Cause
+      {{ root_cause }}
+
+      ## Impact
+      {{ impact }}
+
+      ## Containment
+      {% for a in containment %}- {{ a }}
+      {% endfor %}
+
+      ## Eradication
+      {% for a in eradication %}- {{ a }}
+      {% endfor %}
+
+      ## Recovery
+      {% for a in recovery %}- {{ a }}
+      {% endfor %}
+
+      ## Lessons Learned
+      {% for l in lessons_learned %}- {{ l }}
+      {% endfor %}
+
+  customer:
+    title: Customer Notification
+    body: |
+      # Security Notification
+
+      Dear Customer,
+
+      Our Security Operations Center observed activity related to
+      **{{ alert_name }}** affecting your environment.
+
+      **What we observed:** {{ alert_summary }}
+
+      **Affected assets/users:** {{ affected_assets }} / {{ affected_users }}
+
+      **Current risk level:** {{ severity }}
+
+      **Action required from you:** {{ customer_action }}
+
+      **What our SOC recommends:** {{ recommended_summary }}
+
+      We will continue to monitor and update you. Please contact the SOC with
+      any questions.
+
+  executive:
+    title: Executive Summary
+    body: |
+      # Executive Summary — {{ alert_name }}
+
+      **Business impact:** {{ business_impact }}
+      **Risk level:** {{ severity }}
+      **Current status:** {{ status }}
+
+      ## Decision Required
+      {{ decision_required }}
+
+      ## Next Steps
+      {% for s in next_steps %}- {{ s }}
+      {% endfor %}

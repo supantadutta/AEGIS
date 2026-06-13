@@ -1,0 +1,20 @@
+{
+  "alert_id": "ALRT-2026-0001",
+  "alert_name": "Multiple Failed Logins Followed by Success",
+  "severity": "high",
+  "source_tool": "Splunk ES",
+  "detection_name": "Brute Force - Auth Failure Spike",
+  "detection_id": "BF-001",
+  "event_time": "2026-06-12T03:14:22Z",
+  "start_time": "2026-06-12T03:02:10Z",
+  "end_time": "2026-06-12T03:14:22Z",
+  "source_ip": "45.143.220.0",
+  "destination_ip": "10.0.0.10",
+  "source_host": "unknown-external",
+  "destination_host": "DC01",
+  "username": "admin",
+  "asset_criticality": "critical",
+  "business_impact": "Domain controller targeted; potential domain compromise.",
+  "analyst_notes": "47 failed 4625 events then a single 4624 success from same IP.",
+  "raw_log": "2026-06-12T03:02:10Z EventID=4625 user=admin src_ip=45.143.220.0 dst=DC01 outcome=failure\n2026-06-12T03:02:14Z EventID=4625 user=admin src_ip=45.143.220.0 dst=DC01 outcome=failure\n2026-06-12T03:13:59Z EventID=4625 user=admin src_ip=45.143.220.0 dst=DC01 outcome=failure\n2026-06-12T03:14:22Z EventID=4624 user=admin src_ip=45.143.220.0 dst=DC01 outcome=success logon_type=3"
+}

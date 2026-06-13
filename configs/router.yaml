@@ -1,0 +1,81 @@
+# Router scoring weights (rules mode). All sub-scores normalized 0..1.
+# score = W_cap*capability + W_ctx*context + W_cost*cost + W_lat*latency
+#       + W_priv*privacy + W_hist*historical
+#       - W_risk*risk_penalty - W_sens*data_sensitivity_penalty
+weights:
+  capability_match: 2.0
+  context_fit: 1.0
+  cost_fit: 1.0
+  latency_fit: 1.0
+  privacy_fit: 2.0
+  historical_success: 1.0
+  risk_penalty: 3.0
+  data_sensitivity_penalty: 3.0
+
+# Map each agent to the capability strengths that best serve it. The router
+# uses this to compute capability_match against each model's `strengths`.
+agent_capabilities:
+  PlannerAgent: [planning, reasoning]
+  SOCInvestigatorAgent: [investigation, reasoning]
+  IncidentResponseAgent: [reasoning, writing, planning]
+  DetectionEngineerAgent: [detection_engineering, code, reasoning]
+  ThreatIntelAgent: [reasoning, investigation]
+  LogAnalysisAgent: [log_review, long_context, summarization]
+  DFIRAgent: [investigation, reasoning, long_context]
+  MalwareTriageAgent: [reasoning, code]
+  IdentitySecurityAgent: [investigation, reasoning]
+  NetworkSecurityAgent: [log_review, reasoning]
+  CloudSecurityAgent: [reasoning, log_review]
+  VulnerabilityRiskAgent: [reasoning]
+  CaseReportAgent: [report_writing, writing, summarization]
+  QueryBuilderAgent: [query_generation, code]
+  PlaybookAgent: [planning, writing]
+  SecurityReviewAgent: [code_review, reasoning]
+  SummarizerAgent: [summarization, long_context]
+  DocumentationAgent: [writing, report_writing]
+  DevOpsAgent: [code, reasoning]
+
+# Cost-tier preference (higher = preferred). Used for cost_fit.
+cost_tier_scores:
+  local: 1.0
+  low: 0.8
+  medium: 0.5
+  high: 0.2
+
+# Latency-tier proxy derived from cost/privacy tiers.
+latency_tier_scores:
+  local: 1.0
+  low: 0.8
+  medium: 0.6
+  high: 0.5
+
+context_tier_scores:
+  high: 1.0
+  medium: 0.6
+  low: 0.3
+
+# Privacy fit: how well a model's privacy_tier matches a data sensitivity.
+# sensitivity -> {privacy_tier: score}
+privacy_fit:
+  public:
+    local: 1.0
+    external: 1.0
+  internal:
+    local: 1.0
+    external: 0.9
+  confidential:
+    local: 1.0
+    external: 0.1
+  restricted:
+    local: 1.0
+    external: 0.0
+
+# Default user preference ranking (tie-breaker). mock first so a keyless
+# install is deterministic.
+preference_order:
+  - mock/mock-model
+  - anthropic/claude-sonnet
+  - openai/gpt-5.5
+  - google/gemini-pro
+  - openrouter/deepseek
+  - ollama/llama

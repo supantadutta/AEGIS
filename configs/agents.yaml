@@ -1,0 +1,78 @@
+# Agent registry. Maps agent name -> metadata used by planner & orchestrator.
+agents:
+  PlannerAgent:
+    description: Decomposes a security task into a safe, ordered TaskGraph.
+    default_task_type: planning
+    risk_level: low
+  SOCInvestigatorAgent:
+    description: Investigates alerts, classifies, identifies involved entities.
+    default_task_type: triage
+    risk_level: low
+  IncidentResponseAgent:
+    description: Containment, eradication, recovery, lessons learned.
+    default_task_type: response
+    risk_level: medium
+  DetectionEngineerAgent:
+    description: Creates/improves Sigma, SPL, KQL, CQL, Wazuh, Suricata, YARA.
+    default_task_type: detection_engineering
+    risk_level: low
+  ThreatIntelAgent:
+    description: Enriches IOCs (local-first, external optional).
+    default_task_type: enrichment
+    risk_level: low
+  LogAnalysisAgent:
+    description: Parses/normalizes logs, builds timelines, finds sequences.
+    default_task_type: log_analysis
+    risk_level: low
+  DFIRAgent:
+    description: Forensic timeline analysis, evidence handling, RCA.
+    default_task_type: forensics
+    risk_level: medium
+  MalwareTriageAgent:
+    description: Safe static triage only. Never executes malware.
+    default_task_type: malware_triage
+    risk_level: medium
+  IdentitySecurityAgent:
+    description: Suspicious logins, brute force, lateral movement, Kerberos/NTLM.
+    default_task_type: identity_security
+    risk_level: low
+  NetworkSecurityAgent:
+    description: Firewall, proxy, DNS, IDS/IPS, WAF, NetFlow analysis.
+    default_task_type: network_security
+    risk_level: low
+  CloudSecurityAgent:
+    description: AWS/Azure/GCP/IAM/CloudTrail/GuardDuty/Sentinel alerts.
+    default_task_type: cloud_security
+    risk_level: low
+  VulnerabilityRiskAgent:
+    description: Correlates alerts with CVEs, asset criticality, exposure.
+    default_task_type: vulnerability_risk
+    risk_level: low
+  CaseReportAgent:
+    description: SOC/analyst/executive/customer reports and closure notes.
+    default_task_type: report_writing
+    risk_level: low
+  QueryBuilderAgent:
+    description: SIEM queries across Splunk/LogScale/Elastic/Sentinel/Wazuh.
+    default_task_type: query_generation
+    risk_level: low
+  PlaybookAgent:
+    description: Creates/executes safe playbooks; risky steps need approval.
+    default_task_type: playbook
+    risk_level: high
+  SecurityReviewAgent:
+    description: Reviews generated queries/rules/recommendations for safety.
+    default_task_type: security_review
+    risk_level: low
+  SummarizerAgent:
+    description: Compresses long investigations preserving evidence/IOCs.
+    default_task_type: summarization
+    risk_level: low
+  DocumentationAgent:
+    description: READMEs, playbooks, runbooks, SOPs, analyst guides.
+    default_task_type: documentation
+    risk_level: low
+  DevOpsAgent:
+    description: Docker/deployment/logging/config/dashboard setup.
+    default_task_type: devops
+    risk_level: medium

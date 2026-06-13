@@ -1,0 +1,47 @@
+# Model capability registry. The Router scores ONLY models listed here.
+# Do not hardcode model ids in business logic — everything flows through here.
+models:
+  - id: openai/gpt-5.5
+    provider: openai
+    strengths: [reasoning, planning, detection_engineering, report_writing, code]
+    cost_tier: high
+    context_tier: high
+    privacy_tier: external
+
+  - id: anthropic/claude-sonnet
+    provider: anthropic
+    strengths: [long_context, investigation, writing, code_review, reasoning]
+    cost_tier: medium
+    context_tier: high
+    privacy_tier: external
+
+  - id: google/gemini-pro
+    provider: google
+    strengths: [long_context, summarization, multimodal, log_review]
+    cost_tier: medium
+    context_tier: high
+    privacy_tier: external
+
+  - id: openrouter/deepseek
+    provider: openrouter
+    strengths: [coding, low_cost_reasoning, query_generation]
+    cost_tier: low
+    context_tier: medium
+    privacy_tier: external
+
+  - id: ollama/llama
+    provider: ollama
+    strengths: [local, private_analysis, summarization, simple_tasks]
+    cost_tier: local
+    context_tier: medium
+    privacy_tier: local
+
+  - id: mock/mock-model
+    provider: mock
+    strengths: [local, private_analysis, summarization, simple_tasks,
+                reasoning, planning, detection_engineering, report_writing,
+                code, investigation, long_context, multimodal,
+                query_generation, log_review, code_review, writing]
+    cost_tier: local
+    context_tier: high
+    privacy_tier: local

@@ -1,0 +1,60 @@
+# Threat-intel integrations. Local sources are ALWAYS enabled. External
+# sources are disabled unless their API key env var is set; when disabled they
+# still emit a ThreatIntelResult with verdict="unknown" and a clear summary.
+local_sources:
+  allowlist_csv: configs/data/allowlist.csv
+  blocklist_csv: configs/data/blocklist.csv
+  asset_inventory_csv: configs/data/asset_inventory.csv
+  user_inventory_csv: configs/data/user_inventory.csv
+
+external_sources:
+  - name: MISP
+    enabled: false
+    api_key_env: MISP_API_KEY
+    base_url_env: MISP_URL
+    supports: [ip, domain, url, hash]
+  - name: OpenCTI
+    enabled: false
+    api_key_env: OPENCTI_API_KEY
+    base_url_env: OPENCTI_URL
+    supports: [ip, domain, url, hash]
+  - name: VirusTotal
+    enabled: false
+    api_key_env: VIRUSTOTAL_API_KEY
+    supports: [ip, domain, url, hash]
+  - name: AbuseIPDB
+    enabled: false
+    api_key_env: ABUSEIPDB_API_KEY
+    supports: [ip]
+  - name: Shodan
+    enabled: false
+    api_key_env: SHODAN_API_KEY
+    supports: [ip]
+  - name: GreyNoise
+    enabled: false
+    api_key_env: GREYNOISE_API_KEY
+    supports: [ip]
+  - name: URLScan
+    enabled: false
+    api_key_env: URLSCAN_API_KEY
+    supports: [url, domain]
+  - name: AlienVaultOTX
+    enabled: false
+    api_key_env: OTX_API_KEY
+    supports: [ip, domain, url, hash]
+  - name: ThreatFox
+    enabled: false
+    api_key_env: THREATFOX_API_KEY
+    supports: [ip, domain, url, hash]
+  - name: MalwareBazaar
+    enabled: false
+    api_key_env: MALWAREBAZAAR_API_KEY
+    supports: [hash]
+  - name: WHOIS_RDAP
+    enabled: false
+    api_key_env: null
+    supports: [domain, ip]
+  - name: ASN_GEO
+    enabled: false
+    api_key_env: null
+    supports: [ip]

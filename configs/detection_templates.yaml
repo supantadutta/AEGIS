@@ -1,0 +1,383 @@
+# Detection & query templates, keyed by use-case slug. tools/detections.py and
+# the QueryBuilderAgent render these per platform. Placeholders in {curly}
+# braces are filled from alert context / defaults at render time.
+use_cases:
+  brute-force:
+    title: Brute Force Authentication Attempts
+    description: Multiple failed authentications followed by activity from one source.
+    mitre: { tactic: Credential Access, technique_id: T1110, technique_name: Brute Force }
+    severity: medium
+    data_source: authentication
+    required_fields: [src_ip, user, event_outcome, timestamp]
+    false_positive_notes: Misconfigured service accounts, password rotation, vuln scanners.
+    threshold: 10
+    window_minutes: 5
+    sigma_logsource: { product: windows, service: security }
+    sigma_detection:
+      selection: { EventID: 4625 }
+      condition: "selection | count() by SubjectUserName > {threshold}"
+    splunk: |
+      index={index} sourcetype=auth (action=failure OR EventCode=4625)
+      | stats count by src_ip, user
+      | where count > {threshold}
+    logscale: |
+      #event_simpleName=AuthFail
+      | groupBy([src_ip], function=count())
+      | count > {threshold}
+    kql: |
+      SecurityEvent
+      | where EventID == 4625
+      | summarize Failures=count() by IpAddress, Account, bin(TimeGenerated, {window_minutes}m)
+      | where Failures > {threshold}
+    wazuh: |
+      <rule id="100100" level="10" frequency="{threshold}" timeframe="{window_seconds}">
+        <if_matched_sid>5716</if_matched_sid>
+        <description>Brute force: repeated authentication failures</description>
+        <mitre><id>T1110</id></mitre>
+      </rule>
+    suricata: 'alert tcp any any -> $HOME_NET 22 (msg:"Possible SSH brute force"; flow:to_server; threshold:type both, track by_src, count {threshold}, seconds {window_seconds}; sid:1000001; rev:1;)'
+
+  password-spraying:
+    title: Password Spraying
+    description: One source attempting a few passwords across many accounts.
+    mitre: { tactic: Credential Access, technique_id: T1110.003, technique_name: Password Spraying }
+    severity: high
+    data_source: authentication
+    required_fields: [src_ip, user, event_outcome, timestamp]
+    false_positive_notes: Shared workstations, SSO outages, load balancers as source.
+    threshold: 15
+    window_minutes: 30
+    splunk: |
+      index={index} sourcetype=auth action=failure
+      | stats dc(user) as users count by src_ip
+      | where users > {threshold}
+    logscale: |
+      event_outcome=failure
+      | groupBy([src_ip], function=[count(field=user, distinct=true, as=users)])
+      | users > {threshold}
+    kql: |
+      SecurityEvent
+      | where EventID == 4625
+      | summarize Accounts=dcount(Account) by IpAddress, bin(TimeGenerated, {window_minutes}m)
+      | where Accounts > {threshold}
+
+  successful-login-after-failures:
+    title: Successful Login After Repeated Failures
+    description: A burst of failed logins immediately followed by a success.
+    mitre: { tactic: Credential Access, technique_id: T1110, technique_name: Brute Force }
+    severity: high
+    data_source: authentication
+    required_fields: [src_ip, user, event_outcome, timestamp]
+    false_positive_notes: Users fat-fingering passwords then succeeding.
+    threshold: 5
+    window_minutes: 10
+    splunk: |
+      index={index} sourcetype=auth
+      | transaction user maxspan={window_minutes}m
+      | search action=failure action=success
+      | where eventcount > {threshold}
+    kql: |
+      SecurityEvent
+      | where EventID in (4624, 4625)
+      | summarize Fails=countif(EventID==4625), Success=countif(EventID==4624) by Account, IpAddress, bin(TimeGenerated, {window_minutes}m)
+      | where Fails > {threshold} and Success > 0
+
+  lateral-movement:
+    title: Lateral Movement (Remote Service Use)
+    description: Authenticated access spreading host-to-host in a short window.
+    mitre: { tactic: Lateral Movement, technique_id: T1021, technique_name: Remote Services }
+    severity: high
+    data_source: authentication
+    required_fields: [user, src_host, dst_host, logon_type, timestamp]
+    false_positive_notes: Admin maintenance, vulnerability scanners, patch tools.
+    threshold: 3
+    window_minutes: 15
+    splunk: |
+      index={index} sourcetype=auth action=success logon_type=3
+      | stats dc(dest_host) as hosts by user
+      | where hosts > {threshold}
+    kql: |
+      SecurityEvent
+      | where EventID == 4624 and LogonType == 3
+      | summarize Hosts=dcount(Computer) by Account, bin(TimeGenerated, {window_minutes}m)
+      | where Hosts > {threshold}
+
+  suspicious-rdp:
+    title: Suspicious RDP Logon
+    description: External or off-hours RDP (LogonType 10) activity.
+    mitre: { tactic: Lateral Movement, technique_id: T1021.001, technique_name: RDP }
+    severity: medium
+    data_source: authentication
+    required_fields: [user, src_ip, logon_type, timestamp]
+    false_positive_notes: Legitimate remote admins, jump hosts.
+    kql: |
+      SecurityEvent
+      | where EventID == 4624 and LogonType == 10
+      | where not(ipv4_is_private(IpAddress))
+
+  suspicious-ssh:
+    title: Suspicious SSH Logon
+    description: SSH access from unexpected/external sources.
+    mitre: { tactic: Lateral Movement, technique_id: T1021.004, technique_name: SSH }
+    severity: medium
+    data_source: authentication
+    required_fields: [user, src_ip, timestamp]
+    false_positive_notes: Bastion hosts, CI/CD runners.
+    splunk: |
+      index={index} sourcetype=linux_secure "Accepted password" OR "Accepted publickey"
+      | iplocation src_ip | search Country!="{home_country}"
+
+  new-admin-account:
+    title: New Administrative Account Created
+    description: Creation of a privileged account or addition to admin group.
+    mitre: { tactic: Persistence, technique_id: T1136, technique_name: Create Account }
+    severity: high
+    data_source: directory
+    required_fields: [user, target_account, group, timestamp]
+    false_positive_notes: Approved onboarding, IT provisioning.
+    kql: |
+      SecurityEvent
+      | where EventID in (4720, 4728, 4732, 4756)
+
+  service-account-interactive-login:
+    title: Service Account Interactive Logon
+    description: A service account used for interactive logon (types 2/10/11).
+    mitre: { tactic: Defense Evasion, technique_id: T1078.003, technique_name: Local Accounts }
+    severity: high
+    data_source: authentication
+    required_fields: [user, logon_type, timestamp]
+    false_positive_notes: Misclassified accounts; confirm naming convention.
+    kql: |
+      SecurityEvent
+      | where EventID == 4624 and LogonType in (2, 10, 11)
+      | where Account startswith "svc-" or Account startswith "svc_"
+
+  privileged-account-abuse:
+    title: Privileged Account Abuse
+    description: Sensitive privilege use or anomalous admin behavior.
+    mitre: { tactic: Privilege Escalation, technique_id: T1078, technique_name: Valid Accounts }
+    severity: high
+    data_source: authentication
+    required_fields: [user, privilege, timestamp]
+    false_positive_notes: Scheduled admin tasks.
+    kql: |
+      SecurityEvent | where EventID == 4672
+
+  unusual-server-access:
+    title: Unusual Server Access
+    description: A user accessing a server they have never accessed before.
+    mitre: { tactic: Lateral Movement, technique_id: T1021, technique_name: Remote Services }
+    severity: medium
+    data_source: authentication
+    required_fields: [user, dst_host, timestamp]
+    false_positive_notes: Role changes, new project assignments.
+    splunk: |
+      index={index} sourcetype=auth action=success
+      | stats earliest(_time) as first_seen by user, dest_host
+      | where first_seen > relative_time(now(), "-1d")
+
+  impossible-travel:
+    title: Impossible Travel
+    description: Same user authenticating from geographically distant locations.
+    mitre: { tactic: Initial Access, technique_id: T1078, technique_name: Valid Accounts }
+    severity: high
+    data_source: authentication
+    required_fields: [user, src_ip, geo, timestamp]
+    false_positive_notes: VPNs, mobile carriers, cloud egress.
+    kql: |
+      SigninLogs
+      | summarize Locations=dcount(Location) by UserPrincipalName, bin(TimeGenerated, 1h)
+      | where Locations > 1
+
+  dns-tunneling:
+    title: DNS Tunneling
+    description: Abnormally long/high-entropy DNS queries or high query volume.
+    mitre: { tactic: Exfiltration, technique_id: T1048, technique_name: Exfiltration Over Alternative Protocol }
+    severity: high
+    data_source: dns
+    required_fields: [src_ip, query, query_length, timestamp]
+    false_positive_notes: CDNs, antivirus, telemetry domains.
+    splunk: |
+      index={index} sourcetype=dns
+      | eval qlen=len(query) | where qlen > 50
+      | stats count avg(qlen) as avg_len by src_ip
+
+  suspicious-dns:
+    title: Suspicious DNS Resolution
+    description: Resolution of newly-registered or known-bad domains.
+    mitre: { tactic: Command and Control, technique_id: T1071.004, technique_name: DNS }
+    severity: medium
+    data_source: dns
+    required_fields: [src_ip, query, timestamp]
+    false_positive_notes: Marketing domains, URL shorteners.
+
+  suspicious-powershell:
+    title: Suspicious PowerShell Execution
+    description: Encoded, hidden, or download-cradle PowerShell command lines.
+    mitre: { tactic: Execution, technique_id: T1059.001, technique_name: PowerShell }
+    severity: high
+    data_source: process_creation
+    required_fields: [host, user, process_name, command_line, parent_process, timestamp]
+    false_positive_notes: Admin scripts, software deployment, EDR tooling.
+    sigma_logsource: { category: process_creation, product: windows }
+    sigma_detection:
+      selection:
+        Image|endswith: '\powershell.exe'
+        CommandLine|contains:
+          - ' -enc '
+          - ' -EncodedCommand '
+          - ' -nop '
+          - ' -w hidden '
+          - 'IEX'
+          - 'DownloadString'
+          - 'FromBase64String'
+      condition: selection
+    splunk: |
+      index={index} (process_name=powershell.exe OR process_name=pwsh.exe)
+      (command_line="*-enc*" OR command_line="*EncodedCommand*"
+       OR command_line="*DownloadString*" OR command_line="*FromBase64String*"
+       OR command_line="*-w hidden*" OR command_line="*-nop*")
+      | table _time, host, user, command_line
+    kql: |
+      DeviceProcessEvents
+      | where FileName in~ ("powershell.exe","pwsh.exe")
+      | where ProcessCommandLine has_any ("-enc","-EncodedCommand","DownloadString","FromBase64String","-w hidden","-nop")
+
+  process-injection-indicators:
+    title: Process Injection Indicators
+    description: Cross-process memory write / remote-thread patterns.
+    mitre: { tactic: Defense Evasion, technique_id: T1055, technique_name: Process Injection }
+    severity: high
+    data_source: edr
+    required_fields: [host, source_process, target_process, api, timestamp]
+    false_positive_notes: Some AV/EDR and debuggers inject legitimately.
+
+  encoded-command:
+    title: Encoded Command Line
+    description: Base64 / obfuscated command-line arguments across interpreters.
+    mitre: { tactic: Execution, technique_id: T1059, technique_name: Command and Scripting Interpreter }
+    severity: medium
+    data_source: process_creation
+    required_fields: [host, process_name, command_line, timestamp]
+    false_positive_notes: Legit base64 in some deployment tools.
+
+  web-attack:
+    title: Generic Web Attack
+    description: WAF/web-server signals indicating application-layer attack.
+    mitre: { tactic: Initial Access, technique_id: T1190, technique_name: Exploit Public-Facing Application }
+    severity: high
+    data_source: web
+    required_fields: [src_ip, uri, status, user_agent, timestamp]
+    false_positive_notes: Security scanners, pentest windows.
+
+  sql-injection:
+    title: SQL Injection
+    description: SQLi payload patterns in request parameters.
+    mitre: { tactic: Initial Access, technique_id: T1190, technique_name: Exploit Public-Facing Application }
+    severity: high
+    data_source: web
+    required_fields: [src_ip, uri, query_string, timestamp]
+    false_positive_notes: Legit queries containing SQL keywords.
+    splunk: |
+      index={index} sourcetype=access_combined
+      | regex uri="(?i)(union\\s+select|or\\s+1=1|sleep\\(|information_schema|--\\s)"
+      | table _time, src_ip, uri, status
+
+  directory-traversal:
+    title: Directory Traversal
+    description: Path traversal sequences in web requests.
+    mitre: { tactic: Initial Access, technique_id: T1190, technique_name: Exploit Public-Facing Application }
+    severity: high
+    data_source: web
+    required_fields: [src_ip, uri, status, timestamp]
+    false_positive_notes: Encoded legitimate paths, broken links.
+    splunk: |
+      index={index} sourcetype=access_combined
+      | regex uri="(\\.\\./|\\.\\.\\\\|%2e%2e%2f|%2e%2e/)"
+      | table _time, src_ip, uri, status
+    suricata: 'alert http any any -> $HOME_NET any (msg:"Directory traversal attempt"; flow:to_server,established; http.uri; content:"../"; nocase; sid:1000010; rev:1;)'
+
+  waf-block-allow-analysis:
+    title: WAF Block/Allow Analysis
+    description: Trend of WAF block vs allow decisions per source/rule.
+    mitre: { tactic: Initial Access, technique_id: T1190, technique_name: Exploit Public-Facing Application }
+    severity: low
+    data_source: waf
+    required_fields: [src_ip, action, rule_id, timestamp]
+    false_positive_notes: Overly broad rules causing legit blocks.
+    splunk: |
+      index={index} sourcetype=waf
+      | stats count by src_ip, action, rule_id
+      | sort - count
+
+  malware-hash-hunting:
+    title: Malware Hash Hunting
+    description: Hunt for known-bad file hashes across endpoints.
+    mitre: { tactic: Execution, technique_id: T1204, technique_name: User Execution }
+    severity: high
+    data_source: edr
+    required_fields: [host, file_hash, file_path, timestamp]
+    false_positive_notes: Hash collisions are improbable; confirm source list.
+    kql: |
+      DeviceFileEvents
+      | where SHA256 in ("{hash}")
+
+  c2-beaconing:
+    title: C2 Beaconing
+    description: Regular, low-variance outbound connections to one destination.
+    mitre: { tactic: Command and Control, technique_id: T1071, technique_name: Application Layer Protocol }
+    severity: high
+    data_source: network
+    required_fields: [src_ip, dst_ip, bytes, timestamp]
+    false_positive_notes: Software update checks, telemetry, NTP.
+    splunk: |
+      index={index} sourcetype=netflow
+      | bin _time span=1m | stats count by src_ip, dst_ip, _time
+      | stats avg(count) as avg stdev(count) as sd by src_ip, dst_ip
+      | where sd < 1 and avg > 5
+
+  data-exfiltration:
+    title: Data Exfiltration
+    description: Large outbound transfers to external destinations.
+    mitre: { tactic: Exfiltration, technique_id: T1041, technique_name: Exfiltration Over C2 Channel }
+    severity: high
+    data_source: network
+    required_fields: [src_ip, dst_ip, bytes_out, timestamp]
+    false_positive_notes: Backups, cloud sync, video conferencing.
+    splunk: |
+      index={index} sourcetype=netflow
+      | stats sum(bytes_out) as total by src_ip, dst_ip
+      | where total > 1000000000
+
+  suspicious-file-download:
+    title: Suspicious File Download
+    description: Executable or script downloads from uncommon sources.
+    mitre: { tactic: Command and Control, technique_id: T1105, technique_name: Ingress Tool Transfer }
+    severity: medium
+    data_source: proxy
+    required_fields: [src_ip, url, content_type, timestamp]
+    false_positive_notes: Software updates, developer tooling.
+
+  unauthorized-db-communication:
+    title: Unauthorized Database Communication
+    description: Non-approved host talking to a database port.
+    mitre: { tactic: Collection, technique_id: T1005, technique_name: Data from Local System }
+    severity: high
+    data_source: network
+    required_fields: [src_ip, dst_ip, dst_port, timestamp]
+    false_positive_notes: New app servers not yet in allowlist.
+
+  non-standard-port-communication:
+    title: Non-Standard Port Communication
+    description: Common protocols running on unexpected ports.
+    mitre: { tactic: Command and Control, technique_id: T1571, technique_name: Non-Standard Port }
+    severity: medium
+    data_source: network
+    required_fields: [src_ip, dst_ip, dst_port, protocol, timestamp]
+    false_positive_notes: Internal apps on custom ports.
+
+# Defaults substituted when a field is not supplied by the caller.
+defaults:
+  index: main
+  home_country: US
+  window_seconds: 300

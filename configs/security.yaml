@@ -1,0 +1,48 @@
+# Safety & security policy. See SECURITY.md and Section 12 of the spec.
+shell:
+  # Empty allowlist => nothing is permitted by default. Even allowlisted
+  # commands still require human approval (run_shell_command is gated).
+  allowlist: []
+  denylist:
+    - "rm -rf"
+    - "mkfs"
+    - "dd if="
+    - ":(){ :|:& };:"
+    - "curl | sh"
+    - "wget | sh"
+    - "chmod -R 777"
+    - "> /dev/sd"
+
+redaction:
+  patterns:
+    - name: generic_api_key
+      regex: "(?i)(api[_-]?key|secret|token)\\s*[:=]\\s*['\"]?[A-Za-z0-9_\\-]{16,}"
+    - name: aws_access_key
+      regex: "AKIA[0-9A-Z]{16}"
+    - name: bearer_token
+      regex: "(?i)bearer\\s+[A-Za-z0-9_\\-\\.=]{20,}"
+    - name: private_key_block
+      regex: "-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----"
+    - name: jwt
+      regex: "eyJ[A-Za-z0-9_\\-]+\\.[A-Za-z0-9_\\-]+\\.[A-Za-z0-9_\\-]+"
+  # Entropy heuristic: tokens at/above this Shannon entropy (bits/char) and
+  # length are treated as candidate secrets and redacted.
+  entropy_threshold: 4.0
+  entropy_min_length: 20
+
+# Actions that ALWAYS require explicit human approval before execution.
+approval_required_actions:
+  - run_shell_command
+  - bulk_file_modify
+  - network_call_external
+  - install_package
+  - external_enrichment_api
+  - active_response_action
+  - block_ip_or_domain
+  - disable_account
+  - isolate_endpoint
+  - quarantine_file
+  - modify_production_detection
+  - modify_network_security_config
+  - handle_credentials_or_secrets
+  - offensive_or_purple_team_test

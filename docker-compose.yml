@@ -1,0 +1,27 @@
+# Local dashboard + (optional) Ollama for fully-private operation.
+services:
+  aegis-dashboard:
+    build: .
+    command: uvicorn orchestrator.dashboard.app:app --host 0.0.0.0 --port 8000
+    ports:
+      - "8000:8000"
+    environment:
+      ROUTER_MODE: rules
+      ORCH_ENABLE_PARALLEL: "false"
+      ALLOW_EXTERNAL_FOR_SENSITIVE: "false"
+      AEGIS_DB_PATH: /data/aegis.sqlite
+    volumes:
+      - ./:/app
+      - aegis_data:/data
+
+  # Optional local model backend. Uncomment to run fully offline.
+  # ollama:
+  #   image: ollama/ollama:latest
+  #   ports:
+  #     - "11434:11434"
+  #   volumes:
+  #     - ollama_data:/root/.ollama
+
+volumes:
+  aegis_data:
+  # ollama_data:
