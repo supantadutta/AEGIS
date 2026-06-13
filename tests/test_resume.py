@@ -84,3 +84,62 @@ def test_resume_with_different_model_midgraph(orch):
     assert all(s.status == "completed" for s in resumed.task_graph.steps)
     # current_step_id had advanced past the pause point.
     assert resumed.current_step_id != current or completed_before < len(resumed.task_graph.steps)
+
+
+# --- Phase 9: real adapter dry-run / graceful degradation -------------------
+
+
+import pytest as _pytest  # noqa: E402
+
+from orchestrator.core.state import SessionState  # noqa: E402
+from orchestrator.providers import get_available_provider, get_provider  # noqa: E402
+from orchestrator.providers.base import Prompt  # noqa: E402
+
+REAL_MODELS = [
+    "openai/gpt-5.5",
+    "anthropic/claude-sonnet",
+    "google/gemini-pro",
+    "openrouter/deepseek",
+]
+
+
+@_pytest.mark.parametrize("model_id", REAL_MODELS)
+def test_resume_with_real_adapter_degrades_to_mock(orch, monkeypatch, model_id):
+    """Resuming a mock session with a real model id must NOT fail CI when no
+    key is set: it transparently degrades to the MockProvider."""
+    for env in ("OPENAI_API_KEY", "ANTHROPIC_API_KEY", "GEMINI_API_KEY",
+                "OPENROUTER_API_KEY"):
+        monkeypatch.delenv(env, raising=False)
+    session = orch.create_session("Investigate", alert_context=_alert())
+    orch.run(session, max_steps=2)
+    resumed = orch.resume(session.session_id, model_override=model_id)
+    assert resumed.status == "completed"
+    # the decision recorded the requested model even though execution used mock
+    assert any(d.selected_model == model_id for d in resumed.decisions[2:])
+
+
+@_pytest.mark.parametrize("model_id", REAL_MODELS)
+def test_real_adapter_canonical_mapping_offline(model_id):
+    """Both directions of the canonical mapping work without network/keys."""
+    adapter = get_provider(model_id)
+    prompt = Prompt(agent="SOCInvestigatorAgent", task_type="triage",
+                    instruction="triage", context={"alert_name": "x"})
+    payload = adapter.to_provider_format(SessionState(user_goal="g"), prompt)
+    assert isinstance(payload, dict) and payload
+    # craft a minimal provider-shaped response and map it back to canonical
+    fake = {
+        "choices": [{"message": {"content": "hello"}}],          # openai-style
+        "content": [{"text": "hello"}],                           # anthropic-style
+        "candidates": [{"content": {"parts": [{"text": "hello"}]}}],  # gemini-style
+    }
+    events = adapter.from_provider_format(fake, prompt)
+    assert events and events[0].role == "assistant"
+    assert events[0].content == "hello"
+
+
+def test_get_available_provider_uses_real_when_keyed(monkeypatch):
+    monkeypatch.setenv("OPENAI_API_KEY", "sk-test-not-real")
+    adapter, degraded = get_available_provider("openai/gpt-5.5")
+    assert degraded is False
+    assert adapter.is_available() is True
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
