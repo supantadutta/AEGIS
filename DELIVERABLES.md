@@ -13,19 +13,22 @@ AEGIS/
 ├── orchestrator/
 │   ├── cli.py  main.py
 │   ├── core/   (state, orchestrator, router, planner, checkpoints, memory,
-│   │            events, approvals, config)
+│   │            events, approvals, config, settings)
 │   ├── agents/ (base + planner, soc_investigator, threat_intel, log_analysis,
 │   │            detection_engineer, incident_response, case_report, extended,
 │   │            specialized registry)
 │   ├── providers/ (base, mock, openai, anthropic, gemini, openrouter, ollama)
 │   ├── tools/  (registry, filesystem, shell, git, parsers, ioc, timeline,
-│   │            threat_intel, detections, reports, inventory)
+│   │            threat_intel, intel_sources, detections, reports, inventory)
 │   ├── security/ (redaction, policy, audit, approvals)
 │   ├── storage/  (base, sqlite, postgres-stub)
-│   └── dashboard/ (app.py + templates/)
+│   └── dashboard/ (app.py, service.py + templates/: index, sessions, session,
+│                   investigate, detections, intel, integrations, settings,
+│                   config_edit)
 ├── tests/   (state, checkpoints, router, resume, security, ioc_extraction,
 │             timeline, detection_generation, reports, provider_interface,
-│             tool_approval, query_generation, cli, memory, dashboard)
+│             tool_approval, query_generation, cli, memory, dashboard,
+│             dashboard_controls, settings, intel_sources)
 └── examples/ (alerts/, detections/, reports/)
 ```
 
@@ -46,7 +49,7 @@ uvicorn orchestrator.dashboard.app:app          # dashboard at :8000
 ## Test / lint / types
 
 ```bash
-pytest                 # 112 tests, all passing
+pytest                 # 136 tests, all passing
 ruff check orchestrator tests          # clean
 mypy orchestrator                      # clean
 ```
@@ -110,18 +113,21 @@ adapter degrades cleanly to the MockProvider (no failure).
 
 - Real provider calls are implemented but only exercised when keys are set; CI
   runs entirely on the MockProvider.
-- External threat-intel APIs are adapters that report `disabled`/`enabled but
-  requires approval`; live queries are intentionally gated behind
-  `external_enrichment_api` approval and not auto-executed.
+- Live external threat-intel clients (VirusTotal, AbuseIPDB, GreyNoise, Shodan,
+  OTX, URLScan, ThreatFox, MalwareBazaar, MISP, ASN/Geo, RDAP) are implemented
+  and dashboard-configurable; they stay opt-in (`AEGIS_AUTO_LIVE_INTEL` or the
+  `external_enrichment_api` approval gate) and CI mocks the HTTP layer.
 - `parse_evtx_placeholder` is a placeholder; EVTX/PCAP parsing is not
   implemented (logs are parsed as text/`key=value`).
 - `ROUTER_MODE=llm` is specced but rules mode is the implemented default.
 - `PostgresStorage` is an interface-complete stub (raises `NotImplementedError`).
 - MockProvider narratives are templated (deterministic), not model-generated.
+- Editing a YAML config from the dashboard rewrites it via `yaml.safe_dump`,
+  which drops file comments (the structure/values are preserved).
 
 ## Suggested next improvements
 
-- Wire live external threat-intel behind the existing approval gate + cache.
+- Per-source response caching + rate-limit handling for live threat-intel.
 - Implement `ROUTER_MODE=llm` using the shared `RouterDecision` schema.
 - Real EVTX/PCAP/Zeek parsers feeding the timeline.
 - Implement `PostgresStorage` for multi-user deployments.

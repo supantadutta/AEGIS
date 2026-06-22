@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}AEGIS — Sessions{% endblock %}
+{% block body %}
+<div class="panel">
+  <h2>Sessions / Cases · <a href="/investigate">+ new</a></h2>
+  {% if not sessions %}
+    <p class="tag">No sessions yet. Start one from the <a href="/investigate">Investigate</a> tab.</p>
+  {% else %}
+  <table>
+    <tr><th>ID</th><th>Status</th><th>Task type</th><th>Goal</th><th>Updated</th></tr>
+    {% for s in sessions %}
+    <tr>
+      <td><a href="/session/{{ s.session_id }}">{{ s.session_id[:8] }}</a></td>
+      <td class="status-{{ s.status }}">{{ s.status }}</td>
+      <td>{{ s.security_task_type }}</td>
+      <td>{{ (s.user_goal or '')[:60] }}</td>
+      <td class="tag">{{ s.updated_at[:19] }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% endif %}
+</div>
+{% endblock %}

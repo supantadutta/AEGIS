@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}AEGIS — Settings{% endblock %}
+{% block body %}
+<div class="grid">
+  <div class="panel">
+    <h2>Provider Connections</h2>
+    <p class="tag">Keys are stored in a local <code>0600</code> settings file and applied live.
+      Leave a field blank to keep the current value; tick “clear” to remove it.</p>
+    <form method="post" action="/settings/providers">
+      {% for p in providers %}
+      <div style="margin-bottom:10px">
+        <label>{{ p.label }}
+          {% if p.is_set %}<span class="ok">● set{% if p.kind != 'secret' %}: {{ p.value }}{% else %}: {{ mask(p.value) }}{% endif %}</span>
+          {% else %}<span class="muted">○ not set</span>{% endif %}
+        </label>
+        <input type="{{ 'password' if p.kind == 'secret' else 'text' }}" name="{{ p.env }}"
+               placeholder="{{ p.env }}{{ ' (leave blank to keep)' if p.is_set else '' }}">
+        {% if p.is_set %}<label><input type="checkbox" name="clear_{{ p.env }}" class="inline"> clear</label>{% endif %}
+      </div>
+      {% endfor %}
+      <input type="submit" value="Save provider settings">
+    </form>
+  </div>
+
+  <div class="panel">
+    <h2>Feature Flags</h2>
+    <form method="post" action="/settings/flags">
+      {% for f in flags %}
+      <div style="margin-bottom:10px">
+        <label>{{ f.label }} <span class="tag">({{ f.env }})</span></label>
+        {% if f.kind == 'bool' %}
+          <label><input type="checkbox" name="{{ f.env }}" class="inline"
+            {{ 'checked' if f.value.lower() in ['1','true','yes','on'] else '' }}> enabled</label>
+        {% elif f.kind == 'choice' %}
+          <select name="{{ f.env }}">
+            {% for c in f.choices %}<option {{ 'selected' if f.value == c else '' }}>{{ c }}</option>{% endfor %}
+          </select>
+        {% else %}
+          <input type="text" name="{{ f.env }}" value="{{ f.value }}" placeholder="{{ f.env }}">
+        {% endif %}
+      </div>
+      {% endfor %}
+      <input type="submit" value="Save feature flags">
+    </form>
+  </div>
+</div>
+
+<div class="panel">
+  <h2>Configuration Files</h2>
+  <p class="tag">Edit any config document directly. Changes are validated as YAML and applied immediately.</p>
+  <div class="cards">
+    {% for name in config_names %}
+      <a class="card" href="/settings/config/{{ name }}" style="text-decoration:none">
+        <div class="n" style="font-size:15px">{{ name }}</div>
+        <div class="l">{{ name }}.yaml</div>
+      </a>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="panel">
+  <h2>Effective Runtime</h2>
+  <table>
+    {% for k, v in runtime.items() %}<tr><td class="muted">{{ k }}</td><td>{{ v }}</td></tr>{% endfor %}
+  </table>
+</div>
+{% endblock %}

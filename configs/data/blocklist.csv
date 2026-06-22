@@ -1,0 +1,7 @@
+indicator,type,note
+185.220.101.45,ip,Known Tor exit / abuse reports
+45.143.220.0,ip,Brute-force source observed in honeypots
+evil-c2.example,domain,Simulated C2 domain (lab)
+malware-drop.example,domain,Simulated malware distribution (lab)
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855,hash,Simulated bad SHA256 (lab)
+44d88612fea8a8f36de82e1278abb02f,hash,EICAR-like test hash (lab)

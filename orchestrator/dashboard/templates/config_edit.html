@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}AEGIS — Edit {{ name }}{% endblock %}
+{% block body %}
+<div class="panel">
+  <h2>Edit {{ name }}.yaml</h2>
+  <div style="margin-bottom:10px">
+    {% for n in config_names %}
+      <a href="/settings/config/{{ n }}" class="{{ 'ok' if n == name else 'muted' }}" style="margin-right:10px">{{ n }}</a>
+    {% endfor %}
+  </div>
+  <form method="post" action="/settings/config/{{ name }}">
+    <textarea name="content" style="min-height:460px; font-size:12.5px">{{ raw }}</textarea>
+    <div style="margin-top:10px">
+      <input type="submit" value="Save {{ name }}.yaml">
+      <a href="/settings" style="margin-left:12px">← back to settings</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

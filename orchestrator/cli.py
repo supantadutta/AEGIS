@@ -396,8 +396,10 @@ def _resolve(storage: SQLiteStorage, session_id: str) -> SessionState:
 
 
 def main() -> None:
+    from orchestrator.core import settings
+    settings.apply_to_environ()
     app()
 
 
 if __name__ == "__main__":
-    app()
+    main()

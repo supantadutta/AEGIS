@@ -1,6 +1,6 @@
 [project]
 name = "aegis-blue-orchestrator"
-version = "0.1.0"
+version = "0.2.0"
 description = "AEGIS — local-first Multi-AI Blue Team Orchestrator (defensive security)"
 readme = "README.md"
 requires-python = ">=3.11"

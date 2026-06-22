@@ -154,16 +154,37 @@ blue-orchestrator resume <SESSION_ID> --auto-approve   # explicit human action
 blue-orchestrator feedback <SESSION_ID> --classification-correct --note "good"
 ```
 
-## Dashboard
+## Dashboard (full operator control panel)
 
 ```bash
 uvicorn orchestrator.dashboard.app:app --reload
 # open http://localhost:8000
 ```
 
-Shows sessions, task graph, router decisions, model calls, IOCs, timeline,
-evidence vault, MITRE mapping, queries, detections, threat intel, the approval
-queue, the rendered report, and an analyst feedback form.
+The dashboard is a complete control panel — everything is configurable from the
+browser, no file editing required:
+
+| Tab | What you can do |
+|---|---|
+| **Overview** | Live stats, model/provider status, run a quick investigation |
+| **Investigate** | Submit an alert (JSON/CSV/markdown/text) and run it end-to-end |
+| **Sessions** | Browse cases; drill into task graph, router decisions, IOCs, timeline, MITRE, evidence, report; **approve** gated steps and **resume** with any model |
+| **Detections** | Generate Sigma rules and SIEM queries (Splunk/KQL/LogScale/Wazuh/Suricata) |
+| **Threat Intel** | Live IOC lookups across configured sources; manage allow/block lists |
+| **Integrations** | Enable threat-intel sources, paste API keys, and **test** connections |
+| **Settings** | Set provider API keys & feature flags; edit **every** YAML config in-browser |
+
+Keys/flags are saved to a local `0600` `aegis_settings.json` (git-ignored) and
+applied live — secrets are masked in the UI. See [SECURITY.md](SECURITY.md).
+
+## Live threat-intel integrations
+
+AEGIS ships real clients for VirusTotal, AbuseIPDB, GreyNoise, Shodan,
+AlienVault OTX, URLScan, ThreatFox, MalwareBazaar, MISP, plus keyless ASN/Geo
+(ip-api) and WHOIS/RDAP. Enable and key them from the **Integrations** tab and
+**Test** the connection. They stay local-first and opt-in: the pipeline only
+queries live sources when you turn on `AEGIS_AUTO_LIVE_INTEL`; the Threat-Intel
+tab's lookup is an explicit on-demand query.
 
 ## Adding an AI provider
 
@@ -184,7 +205,7 @@ queue, the rendered report, and an analyst feedback form.
 ## Tests / lint / types
 
 ```bash
-pytest                 # 112 tests
+pytest                 # 136 tests
 ruff check orchestrator tests
 mypy orchestrator
 ```

@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}AEGIS — Detections{% endblock %}
+{% block body %}
+<div class="panel">
+  <h2>Generate Detection / SIEM Query</h2>
+  <form method="post" action="/detections">
+    <div class="row">
+      <div>
+        <label>Output</label>
+        <select name="kind" onchange="document.getElementById('plat').style.display = this.value=='sigma' ? 'none':'block'">
+          <option value="query">SIEM query</option>
+          <option value="sigma">Sigma rule</option>
+        </select>
+      </div>
+      <div id="plat">
+        <label>Platform</label>
+        <select name="platform">
+          {% for p in platforms %}<option>{{ p }}</option>{% endfor %}
+        </select>
+      </div>
+      <div>
+        <label>Use case</label>
+        <select name="use_case">
+          {% for u in use_cases %}<option {{ 'selected' if u=='brute-force' else '' }}>{{ u }}</option>{% endfor %}
+        </select>
+      </div>
+      <div style="flex:0"><label>&nbsp;</label><br><input type="submit" value="Generate"></div>
+    </div>
+  </form>
+</div>
+
+{% if result %}
+<div class="panel">
+  <h2>{{ result.title or 'Result' }}</h2>
+  {% if result.error %}
+    <div class="flash err">{{ result.error }}</div>
+  {% else %}
+    <pre>{{ result.body }}</pre>
+    {% if result.notes %}<p class="tag">False-positive notes: {{ result.notes }}</p>{% endif %}
+  {% endif %}
+</div>
+{% endif %}
+{% endblock %}

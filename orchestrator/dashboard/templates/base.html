@@ -5,45 +5,75 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}AEGIS{% endblock %}</title>
   <style>
-    :root { --bg:#0f1419; --panel:#1a2230; --fg:#d6e1f0; --muted:#8aa0bd;
-            --accent:#4fc3f7; --bad:#ef5350; --good:#66bb6a; --warn:#ffca28; }
+    :root { --bg:#0f1419; --panel:#1a2230; --panel2:#131a26; --fg:#d6e1f0; --muted:#8aa0bd;
+            --accent:#4fc3f7; --bad:#ef5350; --good:#66bb6a; --warn:#ffca28; --line:#243044; }
     * { box-sizing: border-box; }
     body { margin:0; background:var(--bg); color:var(--fg);
            font:14px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; }
     a { color: var(--accent); text-decoration: none; }
-    header { padding:14px 22px; background:#0b0f14; border-bottom:1px solid #243044;
-             display:flex; align-items:center; gap:14px; }
+    a:hover { text-decoration: underline; }
+    header { padding:12px 22px; background:#0b0f14; border-bottom:1px solid var(--line);
+             display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
     header h1 { font-size:18px; margin:0; letter-spacing:2px; }
     .tag { font-size:11px; color:var(--muted); }
+    nav { display:flex; gap:4px; margin-left:auto; flex-wrap:wrap; }
+    nav a { padding:6px 12px; border-radius:6px; color:var(--muted); font-size:13px; }
+    nav a.active { background:var(--accent); color:#06121c; font-weight:700; }
+    nav a:hover { background:#1b2738; text-decoration:none; }
     main { padding:22px; max-width:1200px; margin:0 auto; }
-    .panel { background:var(--panel); border:1px solid #243044; border-radius:8px;
+    .panel { background:var(--panel); border:1px solid var(--line); border-radius:8px;
              padding:14px 16px; margin-bottom:16px; }
     .panel h2 { margin:0 0 10px; font-size:14px; color:var(--accent);
                 text-transform:uppercase; letter-spacing:1px; }
     table { width:100%; border-collapse:collapse; }
-    th,td { text-align:left; padding:6px 8px; border-bottom:1px solid #243044;
+    th,td { text-align:left; padding:6px 8px; border-bottom:1px solid var(--line);
             vertical-align:top; font-size:13px; }
     th { color:var(--muted); font-weight:600; }
     .pill { padding:1px 8px; border-radius:10px; font-size:11px; }
     .sev-high,.sev-critical,.v-malicious { background:#3a1414; color:var(--bad); }
     .sev-medium,.v-suspicious { background:#3a3014; color:var(--warn); }
     .sev-low,.v-benign { background:#14331a; color:var(--good); }
-    .status-completed { color:var(--good); } .status-waiting_approval { color:var(--warn); }
-    .status-failed { color:var(--bad); }
+    .status-completed,.ok { color:var(--good); } .status-waiting_approval { color:var(--warn); }
+    .status-failed,.bad { color:var(--bad); } .status-running { color:var(--accent); }
     pre { white-space:pre-wrap; background:#0b0f14; padding:12px; border-radius:6px;
-          overflow:auto; max-height:480px; }
+          overflow:auto; max-height:520px; }
     .grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    .cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; }
+    .card { background:var(--panel2); border:1px solid var(--line); border-radius:8px; padding:14px; }
+    .card .n { font-size:26px; font-weight:700; color:var(--fg); }
+    .card .l { font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:1px; }
     button, input[type=submit] { background:var(--accent); color:#06121c; border:0;
-            padding:6px 12px; border-radius:5px; cursor:pointer; font-weight:600; }
-    form label { margin-right:12px; }
+            padding:7px 14px; border-radius:5px; cursor:pointer; font-weight:600; font-family:inherit; }
+    button.ghost { background:#1b2738; color:var(--fg); border:1px solid var(--line); }
+    input[type=text], input[type=password], textarea, select {
+            background:#0b0f14; color:var(--fg); border:1px solid var(--line);
+            border-radius:5px; padding:7px 9px; font-family:inherit; font-size:13px; width:100%; }
+    textarea { min-height:120px; }
+    label { display:inline-block; color:var(--muted); font-size:12px; margin:6px 0 2px; }
+    .row { display:flex; gap:12px; flex-wrap:wrap; align-items:end; }
+    .row > div { flex:1; min-width:160px; }
+    .flash { padding:10px 14px; border-radius:6px; margin-bottom:14px; font-size:13px; }
+    .flash.msg { background:#14331a; border:1px solid #2c6b3a; color:#bdf0c8; }
+    .flash.err { background:#3a1414; border:1px solid #6b2c2c; color:#f3bdbd; }
+    .muted { color:var(--muted); }
+    .inline { display:inline; }
+    code { background:#0b0f14; padding:1px 5px; border-radius:4px; }
   </style>
 </head>
 <body>
   <header>
     <h1>🛡 AEGIS</h1>
     <span class="tag">Multi-AI Blue Team Orchestrator · defensive · local-first</span>
-    <span style="margin-left:auto"><a href="/">sessions</a></span>
+    <nav>
+      {% for href, label in nav %}
+        <a href="{{ href }}" class="{{ 'active' if (path == href or (href != '/' and path.startswith(href))) else '' }}">{{ label }}</a>
+      {% endfor %}
+    </nav>
   </header>
-  <main>{% block body %}{% endblock %}</main>
+  <main>
+    {% if msg %}<div class="flash msg">✔ {{ msg }}</div>{% endif %}
+    {% if err %}<div class="flash err">✖ {{ err }}</div>{% endif %}
+    {% block body %}{% endblock %}
+  </main>
 </body>
 </html>

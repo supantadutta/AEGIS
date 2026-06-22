@@ -1,0 +1,6 @@
+username,display_name,department,privileged,service_account,note
+jsmith,John Smith,Finance,false,false,Standard finance user
+admin,Administrator,IT,true,false,Built-in admin
+svc-backup,Backup Service,IT,true,true,Backup service account
+arossi,Anna Rossi,HR,false,false,HR analyst
+dwilson,David Wilson,IT,true,false,Domain admin

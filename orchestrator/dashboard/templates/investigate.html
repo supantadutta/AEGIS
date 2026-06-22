@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}AEGIS — Investigate{% endblock %}
+{% block body %}
+<div class="panel">
+  <h2>Investigate an Alert</h2>
+  <p class="tag">Paste an alert as JSON, CSV, markdown, or free text. AEGIS plans a
+    task graph, routes each step to the best model, and produces analyst-grade output.
+    With no provider keys it runs end-to-end on the deterministic mock model.</p>
+  <form method="post" action="/investigate">
+    <label>Alert content</label>
+    <textarea name="alert_text" style="min-height:220px" placeholder='{"alert_name":"Brute force","src_ip":"45.143.220.0","user":"admin","outcome":"success after failures"}'></textarea>
+    <div class="row" style="margin-top:10px">
+      <div>
+        <label>Data sensitivity</label>
+        <select name="sensitivity">
+          <option value="internal" selected>internal</option>
+          <option value="public">public</option>
+          <option value="confidential">confidential (local models only)</option>
+          <option value="restricted">restricted (local models only)</option>
+        </select>
+      </div>
+      <div>
+        <label>Format</label>
+        <select name="fmt">
+          <option value="auto" selected>auto-detect</option>
+          <option value="json">json</option><option value="csv">csv</option>
+          <option value="markdown">markdown</option><option value="text">text</option>
+        </select>
+      </div>
+      <div style="flex:0;min-width:160px">
+        <label>Approvals</label>
+        <label><input type="checkbox" name="auto_approve" class="inline"> auto-approve gated steps</label>
+      </div>
+    </div>
+    <div style="margin-top:12px"><input type="submit" value="Run investigation"></div>
+  </form>
+</div>
+{% endblock %}

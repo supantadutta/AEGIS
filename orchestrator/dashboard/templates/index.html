@@ -1,20 +1,73 @@
 {% extends "base.html" %}
-{% block title %}AEGIS — Sessions{% endblock %}
+{% block title %}AEGIS — Overview{% endblock %}
 {% block body %}
 <div class="panel">
-  <h2>Sessions / Cases</h2>
-  {% if not sessions %}
-    <p class="tag">No sessions yet. Run
-      <code>blue-orchestrator investigate examples/alerts/brute_force_alert.json</code>.</p>
+  <h2>Overview</h2>
+  <div class="cards">
+    <div class="card"><div class="n">{{ stats.total_sessions }}</div><div class="l">Sessions</div></div>
+    <div class="card"><div class="n">{{ stats.by_status.get('completed', 0) }}</div><div class="l">Completed</div></div>
+    <div class="card"><div class="n status-waiting_approval">{{ stats.by_status.get('waiting_approval', 0) }}</div><div class="l">Awaiting approval</div></div>
+    <div class="card"><div class="n">{{ stats.models_available }}/{{ stats.models_total }}</div><div class="l">Models live</div></div>
+    <div class="card"><div class="n">{{ stats.flags.ROUTER_MODE }}</div><div class="l">Router mode</div></div>
+  </div>
+</div>
+
+<div class="grid">
+  <div class="panel">
+    <h2>Quick Investigate</h2>
+    <form method="post" action="/investigate">
+      <label>Alert (JSON, CSV, markdown, or free text)</label>
+      <textarea name="alert_text" placeholder="user=admin failed login src_ip=45.143.220.0 repeatedly then success"></textarea>
+      <div class="row" style="margin-top:8px">
+        <div>
+          <label>Sensitivity</label>
+          <select name="sensitivity">
+            <option>internal</option><option>public</option>
+            <option>confidential</option><option>restricted</option>
+          </select>
+        </div>
+        <div>
+          <label>Format</label>
+          <select name="fmt"><option>auto</option><option>json</option><option>csv</option>
+            <option>markdown</option><option>text</option></select>
+        </div>
+        <div style="flex:0">
+          <label><input type="checkbox" name="auto_approve" class="inline"> auto-approve</label>
+        </div>
+      </div>
+      <div style="margin-top:10px"><input type="submit" value="Run investigation"></div>
+    </form>
+  </div>
+
+  <div class="panel">
+    <h2>Model / Provider Status</h2>
+    <table>
+      <tr><th>Model</th><th>Provider</th><th>Privacy</th><th>Status</th></tr>
+      {% for p in providers %}
+      <tr>
+        <td>{{ p.id }}</td><td class="tag">{{ p.provider }}</td>
+        <td class="tag">{{ p.privacy_tier }}</td>
+        <td>{% if p.available %}<span class="ok">● live</span>{% else %}<span class="muted">○ mock fallback</span>{% endif %}</td>
+      </tr>
+      {% endfor %}
+    </table>
+    <p class="tag" style="margin-top:8px">Configure keys under <a href="/settings">Settings</a>.</p>
+  </div>
+</div>
+
+<div class="panel">
+  <h2>Recent Sessions · <a href="/sessions">view all</a></h2>
+  {% if not stats.recent %}
+    <p class="tag">No sessions yet — run one above or from the <a href="/investigate">Investigate</a> tab.</p>
   {% else %}
   <table>
-    <tr><th>ID</th><th>Status</th><th>Task type</th><th>Goal</th><th>Updated</th></tr>
-    {% for s in sessions %}
+    <tr><th>ID</th><th>Status</th><th>Task</th><th>Goal</th><th>Updated</th></tr>
+    {% for s in stats.recent %}
     <tr>
       <td><a href="/session/{{ s.session_id }}">{{ s.session_id[:8] }}</a></td>
       <td class="status-{{ s.status }}">{{ s.status }}</td>
       <td>{{ s.security_task_type }}</td>
-      <td>{{ (s.user_goal or '')[:60] }}</td>
+      <td>{{ (s.user_goal or '')[:48] }}</td>
       <td class="tag">{{ s.updated_at[:19] }}</td>
     </tr>
     {% endfor %}

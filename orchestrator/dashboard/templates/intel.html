@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}AEGIS — Threat Intel{% endblock %}
+{% block body %}
+<div class="panel">
+  <h2>IOC Lookup</h2>
+  <p class="tag">Checks the local allow/block lists plus every <a href="/integrations">configured</a>
+    external source. Running a lookup here is an explicit action and queries live sources directly.
+    {% if not auto_live %}Automated pipeline live-querying is currently OFF (enable it under Settings).{% endif %}</p>
+  <form method="post" action="/intel/lookup">
+    <div class="row">
+      <div><label>Observable</label><input type="text" name="observable" value="{{ observable }}" placeholder="45.143.220.0 / evil.example / hash"></div>
+      <div style="flex:0;min-width:140px">
+        <label>Type</label>
+        <select name="obs_type"><option value="">auto</option><option>ip</option>
+          <option>domain</option><option>url</option><option>hash</option><option>email</option></select>
+      </div>
+      <div style="flex:0"><label>&nbsp;</label><br><input type="submit" value="Look up"></div>
+    </div>
+  </form>
+  {% if results is not none %}
+  <table style="margin-top:12px">
+    <tr><th>Source</th><th>Verdict</th><th>Conf</th><th>Summary</th></tr>
+    {% for r in results %}
+    <tr>
+      <td>{{ r.source }}</td>
+      <td><span class="pill v-{{ r.verdict }}">{{ r.verdict }}</span></td>
+      <td>{{ '%.2f' % r.confidence }}</td>
+      <td>{{ r.summary }}{% if r.raw_reference %} · <a href="{{ r.raw_reference }}" target="_blank" rel="noopener">ref</a>{% endif %}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% endif %}
+</div>
+
+<div class="grid">
+  {% for which, rows, color in [('block', blocklist, 'var(--bad)'), ('allow', allowlist, 'var(--good)')] %}
+  <div class="panel">
+    <h2 style="color:{{ color }}">{{ which|capitalize }}list ({{ rows|length }})</h2>
+    <table>
+      <tr><th>Indicator</th><th>Type</th><th>Note</th><th></th></tr>
+      {% for row in rows %}
+      <tr>
+        <td>{{ row.indicator }}</td><td class="tag">{{ row.type }}</td><td class="tag">{{ row.note }}</td>
+        <td><form method="post" action="/intel/list/remove" class="inline">
+          <input type="hidden" name="which" value="{{ which }}">
+          <input type="hidden" name="indicator" value="{{ row.indicator }}">
+          <button class="ghost" type="submit">✕</button></form></td>
+      </tr>
+      {% endfor %}
+    </table>
+    <form method="post" action="/intel/list/add" style="margin-top:10px">
+      <input type="hidden" name="which" value="{{ which }}">
+      <div class="row">
+        <div><input type="text" name="indicator" placeholder="indicator"></div>
+        <div style="flex:0;min-width:90px"><input type="text" name="obs_type" placeholder="type"></div>
+        <div><input type="text" name="note" placeholder="note"></div>
+        <div style="flex:0"><button type="submit">Add</button></div>
+      </div>
+    </form>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

@@ -20,10 +20,28 @@
   <h2>⚠ Approval Queue</h2>
   {% for a in pending %}<div>{{ a.action }} — {{ a.note }}</div>{% endfor %}
   <form method="post" action="/session/{{ s.session_id }}/approve" style="margin-top:8px">
-    <input type="submit" value="Approve all pending">
+    <input type="submit" value="Approve all pending &amp; continue">
   </form>
 </div>
 {% endif %}
+
+<div class="panel">
+  <h2>Controls</h2>
+  <form method="post" action="/session/{{ s.session_id }}/resume" class="row">
+    <div>
+      <label>Resume with model (optional override)</label>
+      <select name="model">
+        <option value="">— keep router choice —</option>
+        {% for m in known_models %}<option>{{ m }}</option>{% endfor %}
+      </select>
+    </div>
+    <div style="flex:0;min-width:160px">
+      <label>Approvals</label>
+      <label><input type="checkbox" name="auto_approve" class="inline"> auto-approve</label>
+    </div>
+    <div style="flex:0"><label>&nbsp;</label><br><input type="submit" value="Resume"></div>
+  </form>
+</div>
 
 <div class="grid">
   <div class="panel">

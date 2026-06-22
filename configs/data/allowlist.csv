@@ -1,0 +1,7 @@
+indicator,type,note
+8.8.8.8,ip,Google public DNS
+1.1.1.1,ip,Cloudflare public DNS
+microsoft.com,domain,Known good vendor
+windowsupdate.com,domain,Windows Update
+10.0.0.0/8,ip,Internal RFC1918 range
+192.168.0.0/16,ip,Internal RFC1918 range

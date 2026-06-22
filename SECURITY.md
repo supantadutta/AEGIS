@@ -29,5 +29,17 @@ approves via `blue-orchestrator resume SESSION_ID` (or the dashboard).
 - Confidential/restricted data is routed only to local/mock models unless
   `ALLOW_EXTERNAL_FOR_SENSITIVE=true`.
 
+## Settings & secrets storage
+- Provider/integration API keys set from the dashboard are written to a local
+  `aegis_settings.json` created with `0600` permissions and **git-ignored**. Real
+  environment variables always take precedence, so CI/container-injected secrets
+  are never overwritten. Secret values are masked (last 4 chars) wherever the UI
+  displays them.
+- External threat-intel APIs are **opt-in**. The dashboard "Lookup"/"Test"
+  buttons are explicit human actions; the automated investigation pipeline only
+  makes live external calls when the operator enables `AEGIS_AUTO_LIVE_INTEL` (or
+  approves the `external_enrichment_api` gate). A source is queried only when it
+  is enabled, has a client, and its credentials are present.
+
 Report a vulnerability: open a private security advisory or contact the
 maintainers; do not file public issues for sensitive reports.

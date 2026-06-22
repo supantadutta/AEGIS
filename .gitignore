@@ -19,12 +19,13 @@ htmlcov/
 # Environment / secrets
 .env
 *.local
+aegis_settings.json
 
-# AEGIS runtime data
+# AEGIS runtime data (anchored to repo root so configs/data/ is NOT ignored)
 *.sqlite
 *.sqlite3
 *.db
-aegis_data/
-data/
-cases/
-sessions/
+/aegis_data/
+/data/
+/cases/
+/sessions/

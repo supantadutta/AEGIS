@@ -11,6 +11,19 @@ from typing import Any
 
 import yaml
 
+# Logical name -> filename for every editable config document. The dashboard
+# config editor and `save_config()` both use this allow-list so callers can
+# never write to an arbitrary path.
+CONFIG_FILES: dict[str, str] = {
+    "models": "models.yaml",
+    "router": "router.yaml",
+    "agents": "agents.yaml",
+    "security": "security.yaml",
+    "integrations": "integrations.yaml",
+    "detection_templates": "detection_templates.yaml",
+    "report_templates": "report_templates.yaml",
+}
+
 
 def configs_dir() -> Path:
     """Locate the configs directory. Honors AEGIS_CONFIG_DIR, else walks up
@@ -82,7 +95,51 @@ def env_bool(name: str, default: bool = False) -> bool:
     return val.strip().lower() in ("1", "true", "yes", "on")
 
 
-def clear_cache() -> None:  # pragma: no cover - test helper
+_LOADERS = {
+    "models": load_models,
+    "router": load_router,
+    "agents": load_agents,
+    "security": load_security,
+    "integrations": load_integrations,
+    "detection_templates": load_detection_templates,
+    "report_templates": load_report_templates,
+}
+
+
+def load_config(name: str) -> dict[str, Any]:
+    """Load a named config document (see ``CONFIG_FILES``)."""
+    loader = _LOADERS.get(name)
+    if loader is None:
+        raise KeyError(f"unknown config: {name!r}")
+    return loader()
+
+
+def save_config(name: str, data: dict[str, Any]) -> Path:
+    """Write a named config document back to its YAML file and refresh caches.
+
+    Only names in ``CONFIG_FILES`` are accepted. Returns the written path.
+    """
+    fname = CONFIG_FILES.get(name)
+    if fname is None:
+        raise KeyError(f"unknown config: {name!r}")
+    path = configs_dir() / fname
+    with open(path, "w") as f:
+        yaml.safe_dump(data, f, sort_keys=False, allow_unicode=True, default_flow_style=False)
+    clear_cache()
+    return path
+
+
+def runtime_flags() -> dict[str, Any]:
+    """The effective runtime feature flags (env-driven, dashboard-editable)."""
+    return {
+        "ROUTER_MODE": os.getenv("ROUTER_MODE", "rules"),
+        "ORCH_ENABLE_PARALLEL": env_bool("ORCH_ENABLE_PARALLEL"),
+        "ALLOW_EXTERNAL_FOR_SENSITIVE": env_bool("ALLOW_EXTERNAL_FOR_SENSITIVE"),
+        "AEGIS_DB_PATH": os.getenv("AEGIS_DB_PATH", "aegis.sqlite"),
+    }
+
+
+def clear_cache() -> None:
     for fn in (load_models, load_router, load_agents, load_security,
                load_integrations, load_detection_templates, load_report_templates):
         fn.cache_clear()

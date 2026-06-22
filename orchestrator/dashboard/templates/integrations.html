@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}AEGIS — Integrations{% endblock %}
+{% block body %}
+<div class="panel">
+  <h2>Threat-Intel Integrations</h2>
+  <p class="tag">Enable a source, paste its API key, and test the connection — all stored locally
+    and applied live. A source is <span class="ok">configured</span> when it is enabled, has a live
+    client, and its credentials are present.
+    Pipeline auto-querying is <b>{{ 'ON' if auto_live else 'OFF' }}</b> (toggle under
+    <a href="/settings">Settings → Flags</a>).</p>
+
+  {% if test_result %}
+    <div class="flash {{ 'msg' if test_result.ok else 'err' }}">
+      <b>{{ test_name }}</b> test: {{ '✔ ok' if test_result.ok else '✖ failed' }} — {{ test_result.message }}
+      {% if test_result.probe %}<span class="tag">(probe {{ test_result.probe }})</span>{% endif %}
+    </div>
+  {% endif %}
+
+  <table>
+    <tr><th>Source</th><th>Supports</th><th>Status</th><th>API key</th><th></th></tr>
+    {% for s in sources %}
+    <tr>
+      <td><b>{{ s.name }}</b>{% if not s.has_client %} <span class="tag">(no client)</span>{% endif %}</td>
+      <td class="tag">{{ s.supports|join(', ') }}</td>
+      <td>
+        {% if s.configured %}<span class="ok">● configured</span>
+        {% elif s.enabled %}<span class="status-waiting_approval">○ enabled, incomplete</span>
+        {% else %}<span class="muted">○ disabled</span>{% endif %}
+      </td>
+      <td>
+        <form method="post" action="/integrations/save">
+          <input type="hidden" name="name" value="{{ s.name }}">
+          {% if s.requires_key %}
+            <input type="password" name="api_key" placeholder="{{ 'set ✓ — leave blank to keep' if s.has_key else s.api_key_env }}">
+          {% else %}<span class="tag">no key needed</span>{% endif %}
+          {% if s.needs_base_url %}
+            <input type="text" name="base_url" placeholder="{{ 'set ✓' if s.has_base_url else s.base_url_env }}" style="margin-top:4px">
+          {% endif %}
+          <label style="margin-top:4px"><input type="checkbox" name="enabled" class="inline" {{ 'checked' if s.enabled else '' }}> enabled</label>
+          <button type="submit" style="margin-top:4px">Save</button>
+        </form>
+      </td>
+      <td>
+        <form method="post" action="/integrations/test" class="inline">
+          <input type="hidden" name="name" value="{{ s.name }}">
+          <button class="ghost" type="submit" {{ 'disabled' if not s.has_client else '' }}>Test</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+{% endblock %}

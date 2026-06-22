@@ -18,6 +18,19 @@ Multi-AI Blue Team Orchestrator. Local-first, mock-mode by default.
 - [x] Phase 11 — Dashboard
 - [x] Phase 12 — Test completion, docs, deliverables
 
+## v0.2 — Operator control panel
+
+- [x] Runtime settings store (`aegis_settings.json`, 0600, env overlay, masking)
+- [x] Dashboard configures everything: provider keys, feature flags, every YAML
+      config — no file editing required
+- [x] Run investigations, approve gates, and resume (with model override) from
+      the browser
+- [x] Live threat-intel integrations (VirusTotal, AbuseIPDB, GreyNoise, Shodan,
+      OTX, URLScan, ThreatFox, MalwareBazaar, MISP, ASN/Geo, RDAP) — enable, key,
+      and test from the Integrations tab; opt-in for the automated pipeline
+- [x] On-demand IOC lookups + allow/block list management from the UI
+- [x] Fixed `.gitignore` bug that excluded `configs/data/*.csv` from the repo
+
 ## Notes / limitations
 
 - Mock-mode is the default and fully functional with zero API keys.
